@@ -1,0 +1,117 @@
+team_name: Antigravity
+participant_id: team_antigravity
+submission_file: team_antigravity.csv
+
+approach:
+  name: Hybrid TF-IDF + Multi-Signal Scoring
+  description: >
+    A multi-layered hybrid ranking system that combines TF-IDF semantic similarity
+    with structured career, skill, and behavioral signal scoring to rank candidates
+    the way an expert recruiter would — not by keyword matching, but by genuine fit.
+
+  components:
+    semantic_layer:
+      method: TF-IDF Cosine Similarity (bigrams, sublinear TF)
+      features: candidate headline, summary, current title, industry, skills (weighted
+        by proficiency), career history titles and descriptions, certifications
+      weight: 35%
+      rationale: Captures contextual alignment between candidate experience narratives
+        and the JD, rewarding candidates who have actually worked on ranking, retrieval,
+        and recommendation systems regardless of exact keyword usage.
+
+    skill_layer:
+      method: Taxonomy-based keyword matching with proficiency and endorsement weighting
+      features: skill name match against 50+ core ML/AI/retrieval keywords, proficiency
+        level (beginner/intermediate/advanced/expert), peer endorsements, Redrob
+        platform skill assessment scores
+      weight: 25%
+      rationale: Ensures candidates have hands-on technical competence in the exact
+        technology stack required — embeddings, vector DBs, ranking frameworks, NLP.
+
+    career_layer:
+      method: Rule-based career trajectory scoring
+      features: ML/AI months at product companies, production deployment keywords
+        in descriptions (deployed, shipped, scale, A/B test), consulting company
+        penalty (TCS/Infosys/Wipro/Accenture etc.)
+      weight: 15%
+      rationale: The JD explicitly penalizes pure consulting backgrounds and pure
+        research roles. This layer rewards candidates with tangible production experience
+        at product companies.
+
+    experience_seniority_layer:
+      method: Piecewise scoring function
+      features: years_of_experience (sweet spot 5-9 years), current title seniority
+        (Senior/Lead/Principal/Staff/Architect), ML/AI title relevance
+      weight: 15%
+      rationale: JD targets 5-9 year experienced engineers. Scores peak at this
+        range and decay outside it, with seniority boosting ML/AI-focused titles.
+
+    signals_layer:
+      method: Weighted behavioral signal aggregation
+      features: open_to_work_flag, notice_period_days, recruiter_response_rate,
+        interview_completion_rate, avg_response_time_hours, github_activity_score,
+        last_active_date recency, verified_email, verified_phone, linkedin_connected,
+        profile_completeness_score
+      weight: 10%
+      rationale: A perfect-on-paper candidate who hasn't logged in for 6 months
+        and has a 5% recruiter response rate is not actually available. This layer
+        surfaces only candidates who are genuinely reachable and engaged.
+
+    disqualifier_penalties:
+      method: Hard penalty deductions (0-45 points)
+      features: non-ML current title (-22), very low recruiter response (<10% = -18),
+        platform inactivity >180 days (-12), pure consulting background (-15),
+        no production ML evidence (-5)
+      rationale: Directly implements the JD disqualifier criteria. Prevents surface-level
+        keyword matches from gaming the ranking.
+
+dataset_stats:
+  total_candidates_processed: 100000
+  candidates_ranked: 100
+  processing_time_seconds: 35.1
+  tfidf_vocab_size: 20000
+  ngram_range: 1-2
+
+top_candidate_profiles:
+  - rank: 1
+    id: CAND_0039754
+    title: Senior Applied Scientist
+    yoe: 16.2
+    company: Meta
+    score: 1.0000
+  - rank: 2
+    id: CAND_0018499
+    title: Senior Machine Learning Engineer
+    yoe: 7.2
+    company: Zomato
+    score: 0.9736
+  - rank: 3
+    id: CAND_0055905
+    title: Senior Machine Learning Engineer
+    yoe: 8.1
+    company: Flipkart
+    score: 0.9151
+  - rank: 4
+    id: CAND_0046064
+    title: Senior NLP Engineer
+    yoe: 8.9
+    company: Salesforce
+    score: 0.9099
+  - rank: 5
+    id: CAND_0081846
+    title: Lead AI Engineer
+    yoe: 6.7
+    company: Razorpay
+    score: 0.9020
+
+validation:
+  passed: true
+  validator: validate_submission.py (provided by challenge organizers)
+  checks_passed:
+    - header row exactly [candidate_id, rank, score, reasoning]
+    - exactly 100 data rows
+    - all candidate_ids match CAND_XXXXXXX format
+    - all ranks 1-100 present exactly once
+    - scores non-increasing by rank
+    - tie-break by candidate_id ascending
+    - UTF-8 encoding
